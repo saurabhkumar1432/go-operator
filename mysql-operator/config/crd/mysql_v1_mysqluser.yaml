@@ -1,0 +1,144 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: mysqlusers.mysql.example.com
+spec:
+  group: mysql.example.com
+  names:
+    kind: MySQLUser
+    listKind: MySQLUserList
+    plural: mysqlusers
+    singular: mysqluser
+    shortNames:
+      - myuser
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - username
+                - database
+                - databaseRef
+              properties:
+                username:
+                  type: string
+                  description: "The name of the MySQL user to create"
+                database:
+                  type: string
+                  description: "The name of the database the user will have access to"
+                permissions:
+                  type: array
+                  description: "List of permissions for the user (e.g. SELECT, INSERT, etc.)"
+                  items:
+                    type: string
+                databaseRef:
+                  type: object
+                  required:
+                    - secretName
+                  properties:
+                    secretName:
+                      type: string
+                      description: "Name of the secret containing the MySQL connection information"
+                    namespace:
+                      type: string
+                      description: "Namespace where the secret is located"
+                    hostKey:
+                      type: string
+                      description: "Key in the secret for host"
+                    portKey:
+                      type: string
+                      description: "Key in the secret for port"
+                    usernameKey:
+                      type: string
+                      description: "Key in the secret for username"
+                    passwordKey:
+                      type: string
+                      description: "Key in the secret for password"
+                secretName:
+                  type: string
+                  description: "The name of the secret containing the user's password"
+                resourceQuota:
+                  type: object
+                  description: "Resource limits for the user"
+                  properties:
+                    maxConnections:
+                      type: integer
+                      format: int32
+                      minimum: 1
+                      description: "Maximum number of concurrent connections allowed"
+                    maxQueriesPerHour:
+                      type: integer
+                      format: int32
+                      minimum: 0
+                      description: "Limit on the number of queries per hour"
+                    maxUpdatesPerHour:
+                      type: integer
+                      format: int32
+                      minimum: 0
+                      description: "Limit on the number of updates per hour"
+                    maxConnectionsPerHour:
+                      type: integer
+                      format: int32
+                      minimum: 0
+                      description: "Limit on the number of connections per hour"
+            status:
+              type: object
+              properties:
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - type
+                      - status
+                      - lastTransitionTime
+                      - reason
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                        enum:
+                          - "True"
+                          - "False"
+                          - "Unknown"
+                      lastTransitionTime:
+                        type: string
+                        format: date-time
+                      reason:
+                        type: string
+                      message:
+                        type: string
+                phase:
+                  type: string
+                  description: "Current phase of the MySQL user (Pending, Active, Failed)"
+                lastPasswordRotation:
+                  type: string
+                  format: date-time
+                  description: "Timestamp of the last password rotation"
+                observedGeneration:
+                  type: integer
+                  format: int64
+                  description: "Most recent generation observed by the controller"
+      additionalPrinterColumns:
+      - name: Username
+        type: string
+        jsonPath: .spec.username
+      - name: Database
+        type: string
+        jsonPath: .spec.database
+      - name: Status
+        type: string
+        jsonPath: .status.phase
+      - name: Age
+        type: date
+        jsonPath: .metadata.creationTimestamp
+      subresources:
+        status: {}

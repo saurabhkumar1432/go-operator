@@ -1,0 +1,24 @@
+apiVersion: mysql.example.com/v1
+kind: MySQLUser
+metadata:
+  name: sample-user
+spec:
+  username: appuser
+  database: appdb
+  permissions:
+    - SELECT
+    - INSERT
+    - UPDATE
+    - DELETE
+  databaseRef:
+    secretName: mysql-admin-credentials
+    namespace: default
+    hostKey: host
+    portKey: port
+    usernameKey: username
+    passwordKey: password
+  resourceQuota:
+    maxConnections: 10
+    maxQueriesPerHour: 1000
+    maxUpdatesPerHour: 100
+    maxConnectionsPerHour: 500
